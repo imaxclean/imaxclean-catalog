@@ -8,6 +8,24 @@ import { getSession } from '@/lib/session';
 import { revalidatePath as nextRevalidatePath } from 'next/cache';
 import fs from 'fs';
 import path from 'path';
+import { v2 as cloudinary } from 'cloudinary';
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+function isCloudinaryConfigured() {
+  return !!(
+    process.env.CLOUDINARY_CLOUD_NAME &&
+    process.env.CLOUDINARY_CLOUD_NAME !== 'your_cloud_name_here' &&
+    process.env.CLOUDINARY_API_KEY &&
+    process.env.CLOUDINARY_API_KEY !== 'your_api_key_here' &&
+    process.env.CLOUDINARY_API_SECRET &&
+    process.env.CLOUDINARY_API_SECRET !== 'your_api_secret_here'
+  );
+}
 
 async function saveUploadedFile(file: any): Promise<string | null> {
   if (!file || typeof file !== 'object' || !('arrayBuffer' in file) || file.size === 0) {
@@ -17,6 +35,26 @@ async function saveUploadedFile(file: any): Promise<string | null> {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
     
+    if (isCloudinaryConfigured()) {
+      return new Promise((resolve) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            folder: 'imaxclean_catalog',
+          },
+          (error, result) => {
+            if (error) {
+              console.error('Cloudinary upload error:', error);
+              resolve(null);
+            } else {
+              resolve(result?.secure_url || null);
+            }
+          }
+        );
+        uploadStream.end(buffer);
+      });
+    }
+
+    // Local fallback if Cloudinary is not configured
     const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
     if (!fs.existsSync(uploadsDir)) {
       fs.mkdirSync(uploadsDir, { recursive: true });
