@@ -70,7 +70,7 @@ export default function LoginPage() {
                 name="password"
                 id="password"
                 className="w-full bg-black/[0.02] dark:bg-white/[0.02] border border-black/10 dark:border-white/10 focus:border-primary-500 focus:outline-none rounded-lg pl-9 pr-3 py-2.5 text-xs"
-                placeholder="••••••••"
+                placeholder="Enter Password"
                 required
               />
               <KeyRound className="absolute left-3 text-brand-fg/40" size={14} />
@@ -91,25 +91,7 @@ export default function LoginPage() {
         </form>
 
         {/* Footer info links */}
-        <div className="space-y-4 pt-4 border-t border-black/[0.05] dark:border-white/[0.05]">
-          <div className="text-center text-xs text-brand-fg/60">
-            Don&apos;t have an account?{' '}
-            <Link href="/register" className="font-bold text-primary-500 hover:underline">
-              Create B2B Account
-            </Link>
-          </div>
-
-          <div className="p-3 bg-black/[0.02] dark:bg-white/[0.02] border rounded-lg flex items-start gap-2.5 text-[10px] text-brand-fg/50 leading-normal">
-            <ShieldCheck className="text-primary-500 shrink-0 mt-0.5" size={14} />
-            <div>
-              <span className="font-bold text-brand-fg">Quick Access Credentials:</span>
-              <br />
-              Admin: <span className="font-mono select-all">admin@imaxclean.com</span> (pwd: <span className="font-mono select-all">admin123</span>)
-              <br />
-              Client: <span className="font-mono select-all">customer@imaxclean.com</span> (pwd: <span className="font-mono select-all">customer123</span>)
-            </div>
-          </div>
-        </div>
+        
       </div>
     </div>
   );

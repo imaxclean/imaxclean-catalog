@@ -232,7 +232,7 @@ export default function HomepageClient({ categories, products }: HomepageClientP
 
                     <Link
                       href={`/categories/${category.slug}`}
-                      className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-primary-500 hover:text-primary-600 transition-colors self-start sm:self-auto group shrink-0"
+                      className="hidden sm:inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-primary-500 hover:text-primary-600 transition-colors self-start sm:self-auto group shrink-0"
                     >
                       <span>Show all products</span>
                       <ArrowRight size={13} className="transform group-hover:translate-x-1 transition-transform" />
@@ -260,6 +260,17 @@ export default function HomepageClient({ categories, products }: HomepageClientP
                       ))}
                     </AnimatePresence>
                   </motion.div>
+
+                  {/* Mobile-only Show all products link */}
+                  <div className="sm:hidden pt-2">
+                    <Link
+                      href={`/categories/${category.slug}`}
+                      className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-primary-500 hover:text-primary-600 transition-colors group"
+                    >
+                      <span>Show all products</span>
+                      <ArrowRight size={13} className="transform group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                  </div>
 
                   {/* Show all button */}
                   {hasMore && (
