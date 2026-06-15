@@ -2,25 +2,124 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --foreground: #0f172a;
+  
+  --primary: 175 100% 30%; /* #009688 - Premium Teal */
+  --primary-glow: 175 100% 50% / 15%;
+  
+  --secondary: 195 90% 40%; /* Oceanic Blue */
+  
+  --card-bg: 255 255 255% / 70%;
+  --card-border: 214.3 31.8% 91.4% / 60%;
+  
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Dark mode disabled — always use light theme */
+
+@theme {
+  --color-primary-50: hsl(175 100% 97%);
+  --color-primary-100: hsl(175 100% 90%);
+  --color-primary-200: hsl(175 100% 80%);
+  --color-primary-300: hsl(175 100% 65%);
+  --color-primary-400: hsl(175 100% 50%);
+  --color-primary-500: hsl(var(--primary));
+  --color-primary-600: hsl(175 100% 25%);
+  --color-primary-700: hsl(175 100% 18%);
+  
+  --color-secondary-500: hsl(var(--secondary));
+  
+  --color-brand-bg: hsl(var(--background));
+  --color-brand-fg: hsl(var(--foreground));
+  
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
+}
+
+/* Custom base styles */
+body {
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* Glassmorphism template */
+.glassmorphism {
+  background-color: rgba(var(--card-bg));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid hsla(var(--card-border));
+}
+
+/* Scrollbar customization */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: hsla(var(--card-border));
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary));
+}
+
+/* Micro-animations */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 15px hsla(var(--primary-glow));
+  }
+  50% {
+    box-shadow: 0 0 25px hsla(175 100% 50% / 35%);
+  }
+}
+
+.animate-glow {
+  animation: pulseGlow 3s ease-in-out infinite;
+}
+
+@keyframes shine {
+  100% {
+    left: 125%;
+  }
+}
+
+.shine-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.shine-btn::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -60%;
+  width: 30%;
+  height: 200%;
+  background: rgba(255, 255, 255, 0.25);
+  transform: rotate(30deg);
+  transition: none;
+}
+
+.shine-btn:hover::after {
+  animation: shine 0.75s ease-out;
 }
