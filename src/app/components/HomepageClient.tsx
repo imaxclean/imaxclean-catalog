@@ -11,7 +11,7 @@ interface Product {
   name: string;
   slug: string;
   description: string;
-  sku: string;
+  sku?: string;
   price: number;
   category: string;
   images: string[];
@@ -84,7 +84,7 @@ export default function HomepageClient({ categories, products }: HomepageClientP
       if (!searchLower) return true;
       return (
         product.name.toLowerCase().includes(searchLower) ||
-        product.sku.toLowerCase().includes(searchLower) ||
+        (product.sku?.toLowerCase().includes(searchLower) || false) ||
         product.description.toLowerCase().includes(searchLower)
       );
     });

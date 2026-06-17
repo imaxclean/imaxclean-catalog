@@ -55,7 +55,7 @@ function ProductForm({
 
   // ── Controlled field state — never lost on error ──
   const [name, setName]           = useState(initial?.name ?? '');
-  const [sku, setSku]             = useState(initial?.sku ?? '');
+  const [quantity, setQuantity]   = useState(initial?.quantity != null ? String(initial.quantity) : '');
   const [category, setCategory]   = useState(initial?.category ?? '');
   const [price, setPrice]         = useState(initial?.price != null ? String(initial.price) : '');
   const [stock, setStock]         = useState(initial?.stock ?? 'In Stock');
@@ -127,7 +127,7 @@ function ProductForm({
     e.preventDefault();
     const fd = new FormData();
     fd.set('name', name);
-    fd.set('sku', sku);
+    fd.set('quantity', quantity);
     fd.set('category', category);
     fd.set('price', price);
     fd.set('stock', stock);
@@ -165,13 +165,13 @@ function ProductForm({
             className={inputCls(e.name)} />
           <FieldError errs={e.name} />
         </div>
-        {/* SKU */}
+        {/* Quantity */}
         <div>
-          <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">SKU</label>
-          <input type="text" value={sku} onChange={ev => setSku(ev.target.value)}
-            placeholder="e.g. IMX-EQ-JS400"
-            className={inputCls(e.sku)} />
-          <FieldError errs={e.sku} />
+          <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Quantity</label>
+          <input type="text" value={quantity} onChange={ev => setQuantity(ev.target.value)}
+            placeholder="e.g. 50 pcs"
+            className={inputCls(e.quantity)} />
+          <FieldError errs={e.quantity} />
         </div>
         {/* Category */}
         <div>
@@ -187,7 +187,7 @@ function ProductForm({
         </div>
         {/* Price */}
         <div>
-          <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Price ($)</label>
+          <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Price (KWD)</label>
           <input type="number" step="0.01" value={price} onChange={ev => setPrice(ev.target.value)}
             placeholder="e.g. 1599.99"
             className={inputCls(e.price)} />
@@ -390,7 +390,9 @@ export default function AdminClient({ products: initialProducts = [], categories
   const filteredProducts = products.filter(p => {
     const matchCat = !productCategoryFilter || p.category === productCategoryFilter;
     const q = productSearch.toLowerCase();
-    const matchSearch = !q || p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q) ||
+    const matchSearch = !q || p.name.toLowerCase().includes(q) || 
+      (p.sku?.toLowerCase().includes(q) || false) || 
+      (p.quantity != null && String(p.quantity).includes(q)) ||
       p.category.toLowerCase().includes(q);
     return matchCat && matchSearch;
   });
@@ -502,7 +504,7 @@ export default function AdminClient({ products: initialProducts = [], categories
             <div className="relative flex-1">
               <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
               <input type="text" value={productSearch} onChange={e => setProductSearch(e.target.value)}
-                placeholder="Search by name or SKU…"
+                placeholder="Search by name, SKU or quantity…"
                 className="w-full pl-9 pr-9 py-2.5 bg-white border border-zinc-200 rounded-xl text-xs focus:border-primary-500 focus:outline-none text-zinc-800" />
               {productSearch && (
                 <button onClick={() => setProductSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-700">
@@ -530,7 +532,7 @@ export default function AdminClient({ products: initialProducts = [], categories
                   <tr className="border-b border-zinc-200 bg-zinc-50 text-[10px] font-bold uppercase tracking-wider text-zinc-400">
                     <th className="px-5 py-3">Product</th>
                     <th className="px-5 py-3">Category</th>
-                    <th className="px-5 py-3">SKU</th>
+                    <th className="px-5 py-3">Quantity</th>
                     <th className="px-5 py-3 text-right">Price</th>
                     <th className="px-5 py-3">Stock</th>
                     <th className="px-5 py-3 text-center">Actions</th>
@@ -543,8 +545,8 @@ export default function AdminClient({ products: initialProducts = [], categories
                     <tr key={prod._id} className="hover:bg-zinc-50 transition-colors">
                       <td className="px-5 py-3 font-semibold text-zinc-900 max-w-[200px] truncate">{prod.name}</td>
                       <td className="px-5 py-3 text-zinc-500 capitalize">{prod.category?.replace(/-/g, ' ')}</td>
-                      <td className="px-5 py-3 font-mono text-[10px] text-zinc-400">{prod.sku}</td>
-                      <td className="px-5 py-3 text-right font-bold text-zinc-900">${prod.price?.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                      <td className="px-5 py-3 font-mono text-[10px] text-zinc-400">{prod.quantity != null ? prod.quantity : '-'}</td>
+                      <td className="px-5 py-3 text-right font-bold text-zinc-900">{prod.price?.toLocaleString('en-US', { minimumFractionDigits: 2 })} KWD</td>
                       <td className="px-5 py-3">
                         <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${
                           prod.stock === 'In Stock' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :

@@ -9,7 +9,8 @@ export interface ProductCardProps {
     name: string;
     slug: string;
     description: string;
-    sku: string;
+    sku?: string;
+    quantity?: string;
     price: number;
     category: string;
     images: string[];
@@ -46,7 +47,6 @@ export default function ProductCard({ product }: ProductCardProps) {
         ) : (
           <div className="flex flex-col items-center justify-center p-6 text-center select-none space-y-2">
             <span className="text-3xl">📦</span>
-            <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest">{product.sku}</span>
           </div>
         )}
 
@@ -69,8 +69,10 @@ export default function ProductCard({ product }: ProductCardProps) {
           {product.name}
         </h4>
 
-        {/* SKU */}
-        <span className="text-[10px] text-zinc-400 font-mono mt-0.5">SKU: {product.sku}</span>
+        {/* Quantity */}
+        {product.quantity && (
+          <span className="text-[10px] text-zinc-400 font-mono mt-0.5">Quantity: {product.quantity}</span>
+        )}
 
         {/* Description */}
         <p className="text-xs text-zinc-500 leading-relaxed mt-2.5 line-clamp-2">
@@ -94,7 +96,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           <div className="flex flex-col">
             <span className="text-[10px] text-zinc-400 uppercase tracking-wider font-semibold">Catalog Price</span>
             <span className="text-base font-extrabold text-zinc-900">
-              ${product.price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              {product.price.toLocaleString('en-US', { minimumFractionDigits: 2 })} KWD
             </span>
           </div>
 

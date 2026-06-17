@@ -148,7 +148,7 @@ export default function CartDrawer() {
                           
                           <div className="flex items-center gap-3">
                             <span className="text-xs font-bold text-brand-fg">
-                              ${(item.price * item.quantity).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                              {(item.price * item.quantity).toLocaleString('en-US', { minimumFractionDigits: 2 })} KWD
                             </span>
                             <button
                               type="button"
@@ -168,7 +168,7 @@ export default function CartDrawer() {
                 <div className="border-t border-black/[0.06] dark:border-white/[0.06] pt-4 flex justify-between items-center">
                   <span className="text-xs text-brand-fg/60 font-medium">Estimated Catalog Total:</span>
                   <span className="text-base font-extrabold text-brand-fg">
-                    ${totalPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    {totalPrice.toLocaleString('en-US', { minimumFractionDigits: 2 })} KWD
                   </span>
                 </div>
               </div>

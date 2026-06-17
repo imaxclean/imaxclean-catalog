@@ -20,6 +20,7 @@ export interface Product {
   slug: string;
   description: string;
   sku: string;
+  quantity?: string;
   price: number;
   category: string;
   images: string[];

@@ -11,7 +11,8 @@ interface ProductDetailsClientProps {
     name: string;
     slug: string;
     description: string;
-    sku: string;
+    sku?: string;
+    quantity?: string;
     price: number;
     category: string;
     images: string[];
@@ -106,7 +107,7 @@ export default function ProductDetailsClient({ product, isLoggedIn }: ProductDet
             <div className="space-y-1">
               <span className="text-[10px] text-brand-fg/40 uppercase tracking-wider font-semibold">B2B Base Price</span>
               <div className="text-2xl font-black text-brand-fg">
-                ${product.price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                {product.price.toLocaleString('en-US', { minimumFractionDigits: 2 })} KWD
               </div>
             </div>
           </div>

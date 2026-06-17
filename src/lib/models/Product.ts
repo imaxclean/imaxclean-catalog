@@ -12,6 +12,7 @@ export interface IProduct extends Document {
   slug: string;
   description: string;
   sku: string;
+  quantity?: string;
   price: number;
   category: string; // matches Category slug
   images: string[];
@@ -33,7 +34,8 @@ const ProductSchema: Schema = new Schema({
   name: { type: String, required: true },
   slug: { type: String, required: true, unique: true, index: true },
   description: { type: String, required: true },
-  sku: { type: String, required: true, unique: true, index: true },
+  sku: { type: String, required: false, unique: true, index: true },
+  quantity: { type: String, required: false },
   price: { type: Number, required: true },
   category: { type: String, required: true, index: true },
   images: [{ type: String }],
@@ -58,5 +60,9 @@ const ProductSchema: Schema = new Schema({
 ProductSchema.add({
   reviews: [ReviewSchema]
 });
+
+if (process.env.NODE_ENV === 'development' && mongoose.models.Product) {
+  delete (mongoose.models as any).Product;
+}
 
 export default mongoose.models.Product || mongoose.model<IProduct>('Product', ProductSchema);

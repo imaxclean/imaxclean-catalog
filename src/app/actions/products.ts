@@ -211,7 +211,7 @@ export async function createProduct(prevState: ActionState | undefined, formData
 
   const name = formData.get('name') as string;
   const description = formData.get('description') as string;
-  const sku = formData.get('sku') as string;
+  const quantityVal = formData.get('quantity') as string;
   const priceVal = formData.get('price') as string;
   const category = formData.get('category') as string;
   const specsJson = formData.get('specs') as string;
@@ -228,7 +228,6 @@ export async function createProduct(prevState: ActionState | undefined, formData
 
   if (!name || name.trim().length < 3) errors.name = ['Name is too short.'];
   if (!description || description.trim().length < 10) errors.description = ['Description is too short.'];
-  if (!sku || sku.trim().length < 3) errors.sku = ['SKU is required.'];
   if (!priceVal || isNaN(parseFloat(priceVal))) errors.price = ['A valid price is required.'];
   if (!category) errors.category = ['Category is required.'];
 
@@ -247,12 +246,16 @@ export async function createProduct(prevState: ActionState | undefined, formData
 
   const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
   const price = parseFloat(priceVal);
+  // Auto-generate a unique SKU under the hood for DB compatibility and integrity
+  const sku = 'IMX-' + slug.toUpperCase().slice(0, 10) + '-' + Math.floor(1000 + Math.random() * 9000);
+  const quantity = quantityVal || undefined;
 
   const productData = {
     name,
     slug,
     description,
     sku,
+    quantity,
     price,
     category,
     images: [imageUrl || '/products/scrubber.svg'],
@@ -314,7 +317,7 @@ export async function updateProduct(id: string, prevState: ActionState | undefin
 
   const name = formData.get('name') as string;
   const description = formData.get('description') as string;
-  const sku = formData.get('sku') as string;
+  const quantityVal = formData.get('quantity') as string;
   const priceVal = formData.get('price') as string;
   const category = formData.get('category') as string;
   const specsJson = formData.get('specs') as string;
@@ -331,7 +334,6 @@ export async function updateProduct(id: string, prevState: ActionState | undefin
   const errors: ActionState['errors'] = {};
   if (!name || name.trim().length < 3) errors.name = ['Name is too short.'];
   if (!description || description.trim().length < 10) errors.description = ['Description is too short.'];
-  if (!sku || sku.trim().length < 3) errors.sku = ['SKU is required.'];
   if (!priceVal || isNaN(parseFloat(priceVal))) errors.price = ['A valid price is required.'];
   if (!category) errors.category = ['Category is required.'];
 
@@ -348,9 +350,10 @@ export async function updateProduct(id: string, prevState: ActionState | undefin
 
   const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
   const price = parseFloat(priceVal);
+  const quantity = quantityVal || null;
 
   try {
-    const updateData: any = { name, slug, description, sku, price, category, specs };
+    const updateData: any = { name, slug, description, price, category, specs, quantity };
     if (imageUrl) updateData.images = [imageUrl];
     if (stock) updateData.stock = stock;
 

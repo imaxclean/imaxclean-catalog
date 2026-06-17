@@ -10,7 +10,7 @@ interface Product {
   name: string;
   slug: string;
   description: string;
-  sku: string;
+  sku?: string;
   price: number;
   category: string;
   images: string[];
@@ -70,7 +70,7 @@ export default function CategorySearchClient({ products, categoryName }: Categor
     return products.filter(
       (p) =>
         p.name.toLowerCase().includes(q) ||
-        p.sku.toLowerCase().includes(q) ||
+        (p.sku?.toLowerCase().includes(q) || false) ||
         p.description.toLowerCase().includes(q)
     );
   }, [products, debouncedSearch]);
