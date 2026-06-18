@@ -73,6 +73,44 @@ async function saveUploadedFile(file: any): Promise<string | null> {
   }
 }
 
+async function generateUniqueSlug(name: string, excludeId?: string): Promise<string> {
+  const baseSlug = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+  
+  let slug = baseSlug;
+  let counter = 1;
+  
+  if (isMockDb()) {
+    while (true) {
+      const existing = (await mockDb.getProducts()).find(
+        (p: any) => p.slug === slug && (excludeId ? p._id !== excludeId : true)
+      );
+      if (!existing) {
+        break;
+      }
+      slug = `${baseSlug}-${counter}`;
+      counter++;
+    }
+    return slug;
+  }
+  
+  while (true) {
+    const query: any = { slug };
+    if (excludeId) {
+      query._id = { $ne: excludeId };
+    }
+    const existing = await Product.findOne(query);
+    if (!existing) {
+      break;
+    }
+    slug = `${baseSlug}-${counter}`;
+    counter++;
+  }
+  return slug;
+}
+
 export type ActionState = {
   errors?: {
     [key: string]: string[];
@@ -244,7 +282,7 @@ export async function createProduct(prevState: ActionState | undefined, formData
 
   await connectToDatabase();
 
-  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  const slug = await generateUniqueSlug(name);
   const price = parseFloat(priceVal);
   // Auto-generate a unique SKU under the hood for DB compatibility and integrity
   const sku = 'IMX-' + slug.toUpperCase().slice(0, 10) + '-' + Math.floor(1000 + Math.random() * 9000);
@@ -277,7 +315,14 @@ export async function createProduct(prevState: ActionState | undefined, formData
   } catch (error: any) {
     console.error('Create product error:', error);
     if (error.code === 11000) {
-      return { errors: { sku: ['This SKU or slug already exists.'] } };
+      const isSlug = error.keyPattern && error.keyPattern.slug;
+      const errors: Record<string, string[]> = {
+        form: ['This SKU or slug already exists. Please choose a different name.']
+      };
+      if (isSlug) {
+        errors.name = ['A product with this name/slug already exists.'];
+      }
+      return { errors };
     }
     return { errors: { form: ['An error occurred while creating the product.'] } };
   }
@@ -348,7 +393,7 @@ export async function updateProduct(id: string, prevState: ActionState | undefin
 
   await connectToDatabase();
 
-  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  const slug = await generateUniqueSlug(name, id);
   const price = parseFloat(priceVal);
   const quantity = quantityVal || null;
 
@@ -367,7 +412,16 @@ export async function updateProduct(id: string, prevState: ActionState | undefin
     return { success: true, message: 'Product updated successfully!' };
   } catch (error: any) {
     console.error('Update product error:', error);
-    if (error.code === 11000) return { errors: { sku: ['This SKU or slug already exists.'] } };
+    if (error.code === 11000) {
+      const isSlug = error.keyPattern && error.keyPattern.slug;
+      const errors: Record<string, string[]> = {
+        form: ['This SKU or slug already exists. Please choose a different name.']
+      };
+      if (isSlug) {
+        errors.name = ['A product with this name/slug already exists.'];
+      }
+      return { errors };
+    }
     return { errors: { form: ['An error occurred while updating the product.'] } };
   }
 }
