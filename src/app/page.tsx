@@ -10,7 +10,7 @@ export default async function Home() {
 
   return (
     // No padding-top — HomepageClient owns the sticky search bar which handles its own spacing
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex-1 flex flex-col">
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex-1 flex flex-col w-full min-w-0">
       <HomepageClient categories={categories} products={products} />
     </div>
   );

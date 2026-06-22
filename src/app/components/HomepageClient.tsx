@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import ProductCard from './ProductCard';
 import { Search, X, Layers, ArrowRight, SlidersHorizontal } from 'lucide-react';
@@ -37,11 +37,51 @@ interface HomepageClientProps {
 export default function HomepageClient({ categories, products }: HomepageClientProps) {
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isStuck, setIsStuck] = useState(false);
 
   const searchBarRef = useRef<HTMLDivElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Mouse drag-to-scroll state & handlers for categories list
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [isMouseDown, setIsMouseDown] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+  const [hasMoved, setHasMoved] = useState(false);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!scrollContainerRef.current) return;
+    setIsMouseDown(true);
+    setStartX(e.pageX - scrollContainerRef.current.offsetLeft);
+    setScrollLeft(scrollContainerRef.current.scrollLeft);
+    setHasMoved(false);
+  };
+
+  const handleMouseLeave = () => {
+    setIsMouseDown(false);
+  };
+
+  const handleMouseUp = () => {
+    setIsMouseDown(false);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isMouseDown || !scrollContainerRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - scrollContainerRef.current.offsetLeft;
+    const walk = (x - startX) * 1.5; // Drag speed multiplier
+    if (Math.abs(x - startX) > 5) {
+      setHasMoved(true);
+    }
+    scrollContainerRef.current.scrollLeft = scrollLeft - walk;
+  };
+
+  const handleCategoryClick = (slug: string | null) => {
+    if (hasMoved) return;
+    setSelectedCategory(slug);
+  };
 
   // Debounce effect
   useEffect(() => {
@@ -51,9 +91,9 @@ export default function HomepageClient({ categories, products }: HomepageClientP
     return () => clearTimeout(handler);
   }, [search]);
 
-  // Scroll to results when search changes (if user is scrolled past search bar)
+  // Scroll to results when search or category changes (if user is scrolled past search bar)
   useEffect(() => {
-    if (!debouncedSearch) return;
+    if (!debouncedSearch && !selectedCategory) return;
     if (!resultsRef.current || !searchBarRef.current) return;
 
     const searchRect = searchBarRef.current.getBoundingClientRect();
@@ -61,7 +101,7 @@ export default function HomepageClient({ categories, products }: HomepageClientP
     if (searchRect.bottom < 0) {
       resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-  }, [debouncedSearch]);
+  }, [debouncedSearch, selectedCategory]);
 
   // Detect when search bar is in sticky mode (scrolled past original position)
   useEffect(() => {
@@ -78,37 +118,57 @@ export default function HomepageClient({ categories, products }: HomepageClientP
   // Group products by category and filter
   const searchLower = debouncedSearch.toLowerCase();
 
-  const categoryGroups = categories.map(category => {
-    const matchedProducts = products.filter(product => {
-      if (product.category !== category.slug) return false;
-      if (!searchLower) return true;
-      return (
-        product.name.toLowerCase().includes(searchLower) ||
-        (product.sku?.toLowerCase().includes(searchLower) || false) ||
-        product.description.toLowerCase().includes(searchLower)
-      );
+  // Pre-calculate counts of matching products for each category to show in badges
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    categories.forEach(category => {
+      counts[category.slug] = products.filter(product => {
+        if (product.category !== category.slug) return false;
+        if (!searchLower) return true;
+        return (
+          product.name.toLowerCase().includes(searchLower) ||
+          (product.sku?.toLowerCase().includes(searchLower) || false) ||
+          product.description.toLowerCase().includes(searchLower)
+        );
+      }).length;
     });
-    return { category, products: matchedProducts };
-  }).filter(group => group.products.length > 0);
+    return counts;
+  }, [categories, products, searchLower]);
+
+  const categoryGroups = categories
+    .filter(category => !selectedCategory || category.slug === selectedCategory)
+    .map(category => {
+      const matchedProducts = products.filter(product => {
+        if (product.category !== category.slug) return false;
+        if (!searchLower) return true;
+        return (
+          product.name.toLowerCase().includes(searchLower) ||
+          (product.sku?.toLowerCase().includes(searchLower) || false) ||
+          product.description.toLowerCase().includes(searchLower)
+        );
+      });
+      return { category, products: matchedProducts };
+    })
+    .filter(group => group.products.length > 0);
 
   const totalFilteredCount = categoryGroups.reduce((acc, curr) => acc + curr.products.length, 0);
   const totalProducts = products.length;
 
   return (
-    <div className="space-y-0">
+    <div className="space-y-0 w-full max-w-full min-w-0">
 
       {/* ── Sticky Search Bar ── */}
       <div
         ref={searchBarRef}
-        className={`sticky top-16 z-30 transition-all duration-300 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-3 ${
+        className={`sticky top-16 z-30 transition-all duration-300 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-3 w-auto max-w-[100vw] min-w-0 ${
           isStuck
             ? 'bg-white/95 backdrop-blur-md shadow-md border-b border-zinc-100'
             : 'bg-white py-6'
         }`}
       >
-        <div className="max-w-7xl mx-auto">
-          <div className="relative max-w-2xl mx-auto">
-            <div className="relative flex items-center">
+        <div className="max-w-7xl mx-auto w-full min-w-0 px-4 sm:px-6 lg:px-8">
+          <div className="relative max-w-2xl mx-auto w-full min-w-0">
+            <div className="relative flex items-center w-full min-w-0">
               <input
                 ref={inputRef}
                 type="text"
@@ -156,12 +216,85 @@ export default function HomepageClient({ categories, products }: HomepageClientP
               </div>
             </div>
 
-            {/* Hint text below search when NOT searching */}
-            {!debouncedSearch && (
-              <p className="mt-2 text-center text-[11px] text-zinc-400">
-                Showing {totalProducts} products across {categories.length} categories
-              </p>
-            )}
+            {/* Category Filters */}
+            <div
+              ref={scrollContainerRef}
+              onMouseDown={handleMouseDown}
+              onMouseLeave={handleMouseLeave}
+              onMouseUp={handleMouseUp}
+              onMouseMove={handleMouseMove}
+              style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}
+              className="mt-4 flex items-center gap-2 no-scrollbar pb-1 w-full max-w-full min-w-0 cursor-grab active:cursor-grabbing"
+            >
+              <button
+                onClick={() => handleCategoryClick(null)}
+                className={`relative px-4 py-2 text-xs font-semibold rounded-full whitespace-nowrap transition-all duration-200 cursor-pointer z-10 flex items-center justify-center border ${
+                  !selectedCategory ? 'border-transparent' : 'border-zinc-200/60'
+                }`}
+              >
+                {!selectedCategory && (
+                  <motion.span
+                    layoutId="activeCategoryBg"
+                    className="absolute inset-0 bg-primary-500 rounded-full -z-10 shadow-sm shadow-primary-500/20"
+                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                  />
+                )}
+                <span className={!selectedCategory ? 'text-white' : 'text-zinc-600 hover:text-zinc-900 transition-colors'}>
+                  All Products
+                </span>
+                <span className={`ml-1.5 inline-flex items-center justify-center rounded-full text-[9px] px-1.5 py-0.5 font-bold ${
+                  !selectedCategory ? 'bg-white/20 text-white' : 'bg-zinc-100 text-zinc-500'
+                }`}>
+                  {totalProducts}
+                </span>
+              </button>
+
+              {categories.map((cat) => {
+                const isSelected = selectedCategory === cat.slug;
+                const count = categoryCounts[cat.slug] || 0;
+
+                return (
+                  <button
+                    key={cat._id}
+                    onClick={() => handleCategoryClick(isSelected ? null : cat.slug)}
+                    className={`relative px-4 py-2 text-xs font-semibold rounded-full whitespace-nowrap transition-all duration-200 flex items-center gap-1.5 cursor-pointer z-10 border ${
+                      isSelected ? 'border-transparent' : 'border-zinc-200/60'
+                    }`}
+                  >
+                    {isSelected && (
+                      <motion.span
+                        layoutId="activeCategoryBg"
+                        className="absolute inset-0 bg-primary-500 rounded-full -z-10 shadow-sm shadow-primary-500/20"
+                        transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                      />
+                    )}
+                    <span className={isSelected ? 'text-white' : 'text-zinc-600 hover:text-zinc-900 transition-colors'}>
+                      {cat.name}
+                    </span>
+                    <span className={`inline-flex items-center justify-center rounded-full text-[9px] px-1.5 py-0.5 font-bold ${
+                      isSelected ? 'bg-white/20 text-white' : 'bg-zinc-100 text-zinc-500'
+                    }`}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Persistent Dynamic Hint text (fixed height to prevent layout shifts) */}
+            <p className="mt-2 text-center text-[11px] text-zinc-400 min-h-[16px] leading-4">
+              {debouncedSearch || selectedCategory ? (
+                <span>
+                  Showing {totalFilteredCount} product{totalFilteredCount === 1 ? '' : 's'}
+                  {selectedCategory && ` in ${categories.find(c => c.slug === selectedCategory)?.name}`}
+                  {debouncedSearch && ` matching "${debouncedSearch}"`}
+                </span>
+              ) : (
+                <span>
+                  Showing {totalProducts} products across {categories.length} categories
+                </span>
+              )}
+            </p>
           </div>
         </div>
       </div>
@@ -186,17 +319,18 @@ export default function HomepageClient({ categories, products }: HomepageClientP
               <div className="space-y-1">
                 <h3 className="text-lg font-bold text-zinc-900">No Matches Found</h3>
                 <p className="text-xs text-zinc-500 max-w-xs leading-relaxed">
-                  No products matched &quot;{debouncedSearch}&quot;. Try a shorter keyword or check the spelling.
+                  No products matched the selected filters. Try adjusting your search query or category.
                 </p>
               </div>
               <button
                 onClick={() => {
                   setSearch('');
+                  setSelectedCategory(null);
                   inputRef.current?.focus();
                 }}
                 className="px-6 py-2.5 bg-primary-500 hover:bg-primary-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
               >
-                Clear Search
+                Reset Filters
               </button>
             </motion.div>
 
@@ -222,9 +356,18 @@ export default function HomepageClient({ categories, products }: HomepageClientP
                         <Layers size={12} />
                         <span>Category</span>
                       </div>
-                      <h2 className="text-xl font-extrabold text-zinc-900 tracking-tight">
-                        {category.name}
-                      </h2>
+                      <div className="flex items-center justify-between gap-4">
+                        <h2 className="text-xl font-extrabold text-zinc-900 tracking-tight">
+                          {category.name}
+                        </h2>
+                        <Link
+                          href={`/categories/${category.slug}`}
+                          className="sm:hidden inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-primary-500 hover:text-primary-600 transition-colors group shrink-0"
+                        >
+                          <span>Show all</span>
+                          <ArrowRight size={12} className="transform group-hover:translate-x-0.5 transition-transform" />
+                        </Link>
+                      </div>
                       <p className="text-xs text-zinc-500 max-w-2xl leading-relaxed">
                         {category.description}
                       </p>

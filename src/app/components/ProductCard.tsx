@@ -96,7 +96,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           <div className="flex flex-col">
             <span className="text-[10px] text-zinc-400 uppercase tracking-wider font-semibold">Catalog Price</span>
             <span className="text-base font-extrabold text-zinc-900">
-              {product.price.toLocaleString('en-US', { minimumFractionDigits: 2 })} KWD
+              {product.price.toLocaleString('en-US', { minimumFractionDigits: 3 })} KWD
             </span>
           </div>
 
